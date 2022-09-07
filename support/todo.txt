@@ -1,0 +1,7 @@
+x Draw a die on the screen
+x Press a button to randomly roll the die
+x Count a sum total
+x Draw two dice on the screen
+x Have a second player that takes turns
+x Be able to keep going until you choose to stop, then next turn
+Have a starting pair of numbers to bust on, and then bust
