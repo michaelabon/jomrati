@@ -302,4 +302,51 @@ function pd.update()
 
 end
 
+--
+-- bustSum : scalar integer
+-- isHighRisk : boolean
+-- rollsThisTurn : scalar integer
+-- scoreThisTurn : scalar integer
+-- previousEvilOffers : array of the points offered
+--
+-- returns 0 if no offer made, otherwise returns the points for this evil offer
+function calculateEvilOffer(bustSum, isHighRisk, rollsThisTurn, scoreThisTurn, previousEvilOffers)
+	local oddsPerSum = {
+		-1, -- 1
+		1,  -- 2, etc
+		2,
+		3,
+		4,
+		5,
+		6,
+		5,
+		4,
+		3,
+		2,
+		1,
+	}
+
+	local odds = oddsPerSum[bustSum]
+
+	-- what are the odds you get this far without busting?
+	local makeItInteresting = 0.2
+	-- total = 0; i = 0; while total < makeItInteresting; i += 1; total = 1 - (32 / 36.0) ** i; end; puts total; puts i
+	local total = 0
+	local i = 0
+	while total < makeItInteresting do
+		i += 1
+		total = 1 - ((36 - odds) / 36) ^ i
+	end
+	print("total: " .. total)
+	print("i: " .. i)
+
+	if rollsThisTurn >= i then
+		print("Making an offer!")
+		return 10
+	end
+
+	return 0 -- no bonus points on offer
+end
+
+
 myGameSetUp()
