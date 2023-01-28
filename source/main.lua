@@ -29,10 +29,16 @@ local bustDice = {}
 local bustDiceSum
 local bustDiceSprites = {}
 local rollingDiceSprites = {}
+local highRiskDie
+local highRiskDiceTable
+local highRiskDieSprite
 local playerCount = 2
 local whoseTurn = 1
 local scores = { 0, 0 }
 local turnScore = 0
+local highRiskMultiplier <const> = 6
+
+local isHighRisk = false
 
 
 local fsm = machine.create({
@@ -40,6 +46,9 @@ local fsm = machine.create({
 	
 	events = {
 		{ name = 'establishBust', from = 'rollBust', to = 'rollPress' },
+		{ name = 'offerHighRisk', from = 'rollBust', to = 'offerHighRisk' },
+		{ name = 'acceptHighRisk', from = 'offerHighRisk', to = 'rollPress'},
+		{ name = 'declineHighRisk', from = 'offerHighRisk', to = 'rollPress'},
 		{ name = 'stopPressing', from = 'rollPress', to = 'awardPoints' },
 		{ name = 'pointsAwarded', from = 'awardPoints', to = 'nextPlayer' },
 		{ name = 'goBust', from = 'rollPress', to = 'showBust'},
@@ -51,22 +60,26 @@ local fsm = machine.create({
 		onrollBust = function(self, event, from, to)
 			bustDice = {}
 			bustDiceSum = 0
-			bustDiceSprites[1]:setVisible(true)
-			bustDiceSprites[2]:setVisible(true)
 		end,
 		onestablishBust = function(self, event, from, to)
-			
-		end,
-		onrollPress = function(self, event, from, to)
-			rollingDiceSprites[1]:setVisible(true)
-			rollingDiceSprites[2]:setVisible(true)
+			showBustDice()
 		end,
 		onawardPoints = function(self, event, from, to)
 			scores[whoseTurn] += turnScore
 		end,
 		onnextPlayer = function(self, event, from, to)
+			hideBustDice()
+			hidePressDice()
+
 			turnScore = 0
+			isHighRisk = false
 			advanceTurn()
+		end,
+		onacceptHighRisk = function(self, event, from, to)
+			isHighRisk = true
+		end,
+		ondeclineHighRisk = function(self, event, from, to)
+			isHighRisk = false
 		end,
 	}
 })
@@ -84,28 +97,35 @@ function myGameSetUp()
 	diceTable = gfx.imagetable.new("images/dice")
 	assert(diceTable)
 
+	highRiskDiceTable = gfx.imagetable.new("images/high-risk-dice")
+	assert(highRiskDiceTable)
+
 	math.randomseed(pd.getSecondsSinceEpoch())
 
 	bustDiceSprites[1] = gfx.sprite.new(diceTable:getImage(rollDice()))
 	bustDiceSprites[1]:moveTo(40, 40)
 	bustDiceSprites[1]:add()
-	bustDiceSprites[1]:setVisible(false)
 
 	bustDiceSprites[2] = gfx.sprite.new(diceTable:getImage(rollDice()))
 	bustDiceSprites[2]:moveTo(110, 40)
 	bustDiceSprites[2]:add()
-	bustDiceSprites[2]:setVisible(false)
+
+	hideBustDice()
 	
 	rollingDiceSprites[1] = gfx.sprite.new(diceTable:getImage(rollDice()))
 	rollingDiceSprites[1]:moveTo(260, 40)
 	rollingDiceSprites[1]:add()
-	rollingDiceSprites[1]:setVisible(false)
 	
-
 	rollingDiceSprites[2] = gfx.sprite.new(diceTable:getImage(rollDice()))
 	rollingDiceSprites[2]:moveTo(330, 40)
 	rollingDiceSprites[2]:add()
-	rollingDiceSprites[2]:setVisible(false)
+
+	hidePressDice()
+
+	highRiskDieSprite = gfx.sprite.new(highRiskDiceTable:getImage(rollDice()))
+	highRiskDieSprite:moveTo(295, 40)
+	highRiskDieSprite:add()
+	hideHighRiskDie()
 
 	font = gfx.font.new("font/namco-1x")
 	assert(font)
@@ -123,8 +143,6 @@ end
 -- After this runs (it just runs once), nearly everything will be
 -- controlled by the OS calling `playdate.update()` 30 times a second.
 
-myGameSetUp()
-
 function advanceTurn()
 	whoseTurn += 1
 	if whoseTurn > playerCount then
@@ -132,6 +150,34 @@ function advanceTurn()
 	end
 end
 
+
+function hideBustDice()
+	bustDiceSprites[1]:setVisible(false)
+	bustDiceSprites[2]:setVisible(false)
+end
+
+function showBustDice()
+	bustDiceSprites[1]:setVisible(true)
+	bustDiceSprites[2]:setVisible(true)
+end
+
+function hidePressDice()
+	rollingDiceSprites[1]:setVisible(false)
+	rollingDiceSprites[2]:setVisible(false)
+end
+
+function showPressDice()
+	rollingDiceSprites[1]:setVisible(true)
+	rollingDiceSprites[2]:setVisible(true)
+end
+
+function hideHighRiskDie()
+	highRiskDieSprite:setVisible(false)
+end
+
+function showHighRiskDie()
+	highRiskDieSprite:setVisible(true)
+end
 
 -- `playdate.update()` is the heart of every Playdate game.
 -- This function is called right before every frame is drawn onscreen.
@@ -155,21 +201,43 @@ function pd.update()
 				bustDiceSum += randomDice
 			end
 			
+			showBustDice()
 			turnScore = bustDiceSum
-			
-			fsm:establishBust()
+
+			if bustDiceSum <= 6 then
+				fsm:offerHighRisk()
+			else
+				fsm:establishBust()
+			end
+		end
+	elseif fsm:is('offerHighRisk') then
+		if pd.buttonJustPressed(pd.kButtonA) then
+			fsm:acceptHighRisk()
+		elseif pd.buttonJustPressed(pd.kButtonB) then
+			fsm:declineHighRisk()
 		end
 	elseif fsm:is('rollPress') then
 		if pd.buttonJustPressed(pd.kButtonA) then
-			local thisTurnDice = {}
 			local thisTurnDiceSum = 0
+			if isHighRisk then
+				showHighRiskDie()
+
+				local randomDie = rollDice()
+				highRiskDieSprite:setImage(highRiskDiceTable:getImage(randomDie))
+
+				thisTurnDiceSum += (randomDie * highRiskMultiplier)
+			else
+				showPressDice()
+				
+				local thisTurnDice = {}
+			
+				for i, dice in ipairs(rollingDiceSprites) do
+					local randomDice = rollDice()
+					dice:setImage(diceTable:getImage(randomDice))
 		
-			for i, dice in ipairs(rollingDiceSprites) do
-				local randomDice = rollDice()
-				dice:setImage(diceTable:getImage(randomDice))
-	
-				thisTurnDice[i] = randomDice
-				thisTurnDiceSum += randomDice
+					thisTurnDice[i] = randomDice
+					thisTurnDiceSum += randomDice
+				end
 			end
 			
 			if thisTurnDiceSum == bustDiceSum then
@@ -208,28 +276,29 @@ function pd.update()
 	local scoreTexts = {	
 	 "Score: " .. scores[1],
 	 "Score: " .. scores[2]
- }
- scoreTexts[whoseTurn] = scoreTexts[whoseTurn] .. " +" .. turnScore
+	}
+	scoreTexts[whoseTurn] = scoreTexts[whoseTurn] .. " +" .. turnScore
 	
 	
 	gfx.drawText(scoreTexts[1], 20, 180)
 	gfx.drawText(scoreTexts[2], 270, 180)
 
+	gfx.setFont(font)
+	gfx.setFontTracking(-1)
+	font:setLeading(7)
 	if fsm:is('awardPoints') then
-		gfx.setFont(font)
-		gfx.setFontTracking(-1)
 		gfx.drawText("SUCCESS!  +" .. turnScore, 240, 120)
 	elseif fsm:is('nextPlayer') then
-		gfx.setFont(font)
-		gfx.setFontTracking(-1)
 		gfx.drawText("Player " .. whoseTurn .. ", ready?", 120, 120)
 	elseif fsm:is('showBust') then
-		gfx.setFont(font)
-		gfx.setFontTracking(-1)
 		gfx.drawText("BUST!", 300, 120)
+	elseif fsm:is('offerHighRisk') then
+		gfx.drawText("Play High Risk\nfor 6x points?", 10, 80)
 	end
 
 	local turnIndicator = turnIndicators[whoseTurn]
 	gfx.drawPolygon(turnIndicator)
 
 end
+
+myGameSetUp()
