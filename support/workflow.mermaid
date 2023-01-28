@@ -1,0 +1,53 @@
+stateDiagram-v2
+playerCount: Ask how many players
+establishBonusPoints: Establish the Zap and Bonus
+
+[*] --> playerCount
+playerCount --> establishBonusPoints
+
+establishBonusPoints --> EstablishBust
+state EstablishBust {
+	rollBust: Roll the Bust dice
+	awardBustPoints: Award Zap or Bonus
+	offerHighRisk: Offer High Risk
+	
+	state awardBustChoice <<choice>>
+	state offerHighRiskChoice <<choice>>
+	state highRiskChoice <<choice>>
+
+	[*] --> rollBust
+
+	rollBust --> awardBustChoice
+
+	awardBustChoice --> awardBustPoints: If exact match
+	awardBustChoice --> offerHighRiskChoice: If not exact match
+
+	offerHighRiskChoice --> offerHighRisk: If 2-6
+	offerHighRiskChoice --> [*]: If >= 7
+
+	awardBustPoints --> offerHighRiskChoice: If >= 7
+	
+	offerHighRisk --> highRiskChoice
+	
+	highRiskChoice --> [*]: If declined
+
+}
+
+EstablishBust --> PressLoop
+
+state PressLoop {
+	[*] --> rollPress
+	rollPress --> rollPress: As many times as they want
+	
+	rollPress --> goBust: If matches Bust dice
+	rollPress --> awardPoints: If chooses "Stop"
+	rollPress --> evilOffer: If rolled 2x more than expected
+
+	goBust --> nextPlayer
+	awardPoints --> nextPlayer
+	evilOffer --> evilOfferChoice
+	evilOfferChoice --> rollPress: If accepted
+	evilOfferChoice --> awardPoints: If rejected
+
+	nextPlayer --> [*]
+}

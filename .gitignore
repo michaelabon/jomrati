@@ -1,1 +1,6 @@
 *.pdx
+build/*
+.idea/
+.nova/
+.vscode/
+.DS_Store
