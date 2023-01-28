@@ -43,7 +43,7 @@ local isHighRisk = false
 
 local fsm = machine.create({
 	initial = 'rollBust',
-	
+
 	events = {
 		{ name = 'establishBust', from = 'rollBust', to = 'rollPress' },
 		{ name = 'offerHighRisk', from = 'rollBust', to = 'offerHighRisk' },
@@ -55,7 +55,7 @@ local fsm = machine.create({
 		{ name = 'acceptBust', from = 'showBust', to = 'nextPlayer'},
 		{ name = 'startNextTurn', from = 'nextPlayer', to = 'rollBust' },
 	},
-	
+
 	callbacks = {
 		onrollBust = function(self, event, from, to)
 			bustDice = {}
@@ -70,6 +70,7 @@ local fsm = machine.create({
 		onnextPlayer = function(self, event, from, to)
 			hideBustDice()
 			hidePressDice()
+			hideHighRiskDie()
 
 			turnScore = 0
 			isHighRisk = false
@@ -111,11 +112,11 @@ function myGameSetUp()
 	bustDiceSprites[2]:add()
 
 	hideBustDice()
-	
+
 	rollingDiceSprites[1] = gfx.sprite.new(diceTable:getImage(rollDice()))
 	rollingDiceSprites[1]:moveTo(260, 40)
 	rollingDiceSprites[1]:add()
-	
+
 	rollingDiceSprites[2] = gfx.sprite.new(diceTable:getImage(rollDice()))
 	rollingDiceSprites[2]:moveTo(330, 40)
 	rollingDiceSprites[2]:add()
@@ -196,11 +197,11 @@ function pd.update()
 			for i, dice in ipairs(bustDiceSprites) do
 				local randomDice = rollDice()
 				dice:setImage(diceTable:getImage(randomDice))
-			
+
 				bustDice[i] = randomDice
 				bustDiceSum += randomDice
 			end
-			
+
 			showBustDice()
 			turnScore = bustDiceSum
 
@@ -272,14 +273,14 @@ function pd.update()
 
 	gfx.setFont(font)
 	gfx.setFontTracking(-1)
-	
-	local scoreTexts = {	
+
+	local scoreTexts = {
 	 "Score: " .. scores[1],
 	 "Score: " .. scores[2]
 	}
 	scoreTexts[whoseTurn] = scoreTexts[whoseTurn] .. " +" .. turnScore
-	
-	
+
+
 	gfx.drawText(scoreTexts[1], 20, 180)
 	gfx.drawText(scoreTexts[2], 270, 180)
 
