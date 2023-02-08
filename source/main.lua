@@ -131,8 +131,8 @@ function myGameSetUp()
 	font = gfx.font.new("font/namco-1x")
 	assert(font)
 
-	turnIndicators[1] = pd.geometry.polygon.new(10, 180, 10, 190, 16, 185)
-	turnIndicators[2] = pd.geometry.polygon.new(260, 180, 260, 190, 266, 185)
+	turnIndicators[1] = pd.geometry.polygon.new(10, 220, 10, 230, 16, 225)
+	turnIndicators[2] = pd.geometry.polygon.new(260, 220, 260, 230, 266, 225)
 
 	for _, turnIndicator in ipairs(turnIndicators) do
 		turnIndicator:close()
@@ -229,18 +229,18 @@ function pd.update()
 				thisTurnDiceSum += (randomDie * highRiskMultiplier)
 			else
 				showPressDice()
-				
+
 				local thisTurnDice = {}
-			
+
 				for i, dice in ipairs(rollingDiceSprites) do
 					local randomDice = rollDice()
 					dice:setImage(diceTable:getImage(randomDice))
-		
+
 					thisTurnDice[i] = randomDice
 					thisTurnDiceSum += randomDice
 				end
 			end
-			
+
 			if thisTurnDiceSum == bustDiceSum then
 				fsm:goBust()
 			else
@@ -281,8 +281,8 @@ function pd.update()
 	scoreTexts[whoseTurn] = scoreTexts[whoseTurn] .. " +" .. turnScore
 
 
-	gfx.drawText(scoreTexts[1], 20, 180)
-	gfx.drawText(scoreTexts[2], 270, 180)
+	gfx.drawText(scoreTexts[1], 20, 220)
+	gfx.drawText(scoreTexts[2], 270, 220)
 
 	gfx.setFont(font)
 	gfx.setFontTracking(-1)

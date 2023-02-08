@@ -1,10 +1,10 @@
-.PHONY: run clean build/Output.pdx
+.PHONY: run clean build/output.pdx
 
-run: build/Output.pdx
-	open build/Output.pdx
+run: build/output.pdx
+	open build/output.pdx
 
 build/Output.pdx:
-	pdc source build/Output.pdx
+	pdc source build/output.pdx
 
 clean:
 	rm build/*

@@ -10,7 +10,7 @@ state EstablishBust {
 	rollBust: Roll the Bust dice
 	awardBustPoints: Award Zap or Bonus
 	offerHighRisk: Offer High Risk
-	
+
 	state awardBustChoice <<choice>>
 	state offerHighRiskChoice <<choice>>
 	state highRiskChoice <<choice>>
@@ -26,9 +26,9 @@ state EstablishBust {
 	offerHighRiskChoice --> [*]: If >= 7
 
 	awardBustPoints --> offerHighRiskChoice: If >= 7
-	
+
 	offerHighRisk --> highRiskChoice
-	
+
 	highRiskChoice --> [*]: If declined
 
 }
@@ -38,7 +38,7 @@ EstablishBust --> PressLoop
 state PressLoop {
 	[*] --> rollPress
 	rollPress --> rollPress: As many times as they want
-	
+
 	rollPress --> goBust: If matches Bust dice
 	rollPress --> awardPoints: If chooses "Stop"
 	rollPress --> evilOffer: If rolled 2x more than expected
@@ -46,8 +46,15 @@ state PressLoop {
 	goBust --> nextPlayer
 	awardPoints --> nextPlayer
 	evilOffer --> evilOfferChoice
-	evilOfferChoice --> rollPress: If accepted
+	evilOfferChoice --> rollEvilOffer: If accepted
 	evilOfferChoice --> awardPoints: If rejected
+
+	rollEvilOffer --> displayBustEvilOffer
+	rollEvilOffer --> displayWinEvilOffer
+	displayBustEvilOffer --> nextPlayer
+	displayWinEvilOffer --> rollPress
+	displayWinEvilOffer --> evilOffer
+	displayWinEvilOffer --> awardPoints
 
 	nextPlayer --> [*]
 }

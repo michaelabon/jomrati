@@ -4,4 +4,7 @@ x Count a sum total
 x Draw two dice on the screen
 x Have a second player that takes turns
 x Be able to keep going until you choose to stop, then next turn
-Have a starting pair of numbers to bust on, and then bust
+x Have a starting pair of numbers to bust on, and then bust
+Draw out how the screens are going to look
+Figure out how to animate dice rolling
+Practice some rough timing of dice animating (do you want longer roll animations? shorter? variable?)
